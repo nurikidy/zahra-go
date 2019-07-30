@@ -2,26 +2,29 @@ package main
 import (
   "net/http"
   "strings"
+  "fmt"
 )
 
 import "github.com/go-redis/redis"
 
-func sayHello(w http.ResponseWriter, r *http.Request) {
+func shortner(w http.ResponseWriter, r *http.Request) {
   message := r.URL.Path
   message = strings.TrimPrefix(message, "/")
   shorturl := redisGet(message)
+  
   if shorturl !=""{
-  	message = "Hello " + message + " --> " + shorturl
-  	w.Write([]byte(message))
+  	w.WriteHeader(http.StatusFound)
+    fmt.Fprint(w, "page not found")
   	
   }else{
-     w.Write([]byte("Record not found"))
+    w.WriteHeader(http.StatusNotFound)
+    fmt.Fprint(w, "page not found")
    }
   
 }
 
 func main() {
-  http.HandleFunc("/", sayHello)
+  http.HandleFunc("/", shortner)
   if err := http.ListenAndServe(":8080", nil); err != nil {
     panic(err)
   }
