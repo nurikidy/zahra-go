@@ -14,7 +14,7 @@ func shortner(w http.ResponseWriter, r *http.Request) {
   
   if shorturl !=""{
   	w.WriteHeader(http.StatusFound)
-    fmt.Fprint(w, "page not found")
+    fmt.Fprint(w, "page found")
   	
   }else{
     w.WriteHeader(http.StatusNotFound)
