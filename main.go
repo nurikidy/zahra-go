@@ -1,49 +1,49 @@
 package main
+
 import (
-  "net/http"
-  "strings"
-  "fmt"
+	"fmt"
+	"net/http"
+	"strings"
 )
 
 import "github.com/go-redis/redis"
 
-func shortner(w http.ResponseWriter, r *http.Request) {
-  message := r.URL.Path
-  message = strings.TrimPrefix(message, "/")
-  shorturl := redisGet(message)
-  
-  if shorturl !=""{
-  	w.WriteHeader(http.StatusFound)
-    fmt.Fprint(w, "page found")
-  	
-  }else{
-    w.WriteHeader(http.StatusNotFound)
-    fmt.Fprint(w, "page not found")
-   }
-  
+func checkUrl(w http.ResponseWriter, r *http.Request) {
+	message := r.URL.Path
+	message = strings.TrimPrefix(message, "/")
+	shorturl := redisGet(message)
+
+	if shorturl != "" {
+		w.WriteHeader(http.StatusFound)
+		fmt.Fprint(w, "URL does exist ")
+
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprint(w, "URL does not exist")
+	}
+
 }
 
 func main() {
-  http.HandleFunc("/", shortner)
-  if err := http.ListenAndServe(":8080", nil); err != nil {
-    panic(err)
-  }
+	http.HandleFunc("/", checkUrl)
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		panic(err)
+	}
 }
 
+func redisGet(url string) string {
 
-func redisGet(url string) string{
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
 
-  client := redis.NewClient(&redis.Options{
-  Addr :     "localhost:6379",
-  Password: "", // no password set
-  DB:       0,  // use default DB
-  })
-  
-  val, err := client.Get(url).Result()
-  if err != nil {
-	//panic(err)
-	val= ""
-  }
-   
-  return val
+	val, err := client.Get(url).Result()
+	if err != nil {
+		//panic(err)
+		val = ""
+	}
+
+	return val
 }
