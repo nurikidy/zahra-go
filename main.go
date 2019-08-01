@@ -14,8 +14,7 @@ func checkUrl(w http.ResponseWriter, r *http.Request) {
 	shorturl := redisGet(message)
 
 	if shorturl != "" {
-		w.WriteHeader(http.StatusFound)
-		fmt.Fprint(w, "URL does exist ")
+		http.Redirect(w, r, shorturl, 302)
 
 	} else {
 		w.WriteHeader(http.StatusNotFound)
