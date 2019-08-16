@@ -1,8 +1,8 @@
 package main
 
 import (
-
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -13,12 +13,16 @@ import "github.com/go-redis/redis"
 
 var r *rand.Rand
 
+// init
 func init() {
 	r = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	log.SetPrefix("ZahraLog: ")
+	log.SetFlags(log.Ldate | log.Ltime | log.Llongfile)
+	log.Println("init started")
 }
 
-//creates randomstring based on length put in field
-
+//RandomString creates randomstring based on length put in field
 func RandomString(strlen int) string {
 	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
 	result := make([]byte, strlen)
@@ -28,6 +32,7 @@ func RandomString(strlen int) string {
 	return string(result)
 }
 
+//CustomerHandler hanling request for customer
 func CustomerHandler(w http.ResponseWriter, r *http.Request) {
 	message := r.URL.Path
 	message = strings.TrimPrefix(message, "/")
@@ -37,14 +42,14 @@ func CustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	if shorturl != "" {
 		http.Redirect(w, r, shorturl, 302)
-		fmt.Println("keyword:", message, "does exist and redirects to", shorturl)
+		log.Println("Path:", message, " Status: 302 (Redirect) Target:", shorturl)
 
 		//if shorturl keyword does not exist in redis server it redirects to 404
 
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprint(w, "URL does not exist")
-		fmt.Println("keyword:", message, "does not exist")
+		log.Println("Path:", message, " Status: 404 (does not exist)")
 
 	}
 
@@ -66,26 +71,11 @@ type response struct {
 }
 
 func main() {
-	  http.HandleFunc("/", CustomerHandler)
-	  if err := http.ListenAndServe(":80", nil); err != nil {
-	    panic(err)
-	  }
-	}
-	
+	http.HandleFunc("/", CustomerHandler)
 
-func RedisSet(shorturl string, longurl string) {
-
-	//creates connection with redis server
-
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-
-	err := client.Set(shorturl, longurl, 0).Err()
-	if err != nil {
-		panic(err)
+	log.Println("Starting server at port 8090")
+	if err := http.ListenAndServe(":8090", nil); err != nil {
+		log.Panicln("ERROR STARTING SERVER !!")
 	}
 }
 
@@ -103,6 +93,7 @@ func RedisGet(url string) string {
 
 	val, err := client.Get(url).Result()
 	if err != nil {
+		log.Fatalln("ERROR! Unable to access Redis Server")
 		//panic(err)
 		val = ""
 	}
