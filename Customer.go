@@ -1,3 +1,6 @@
+/***
+ * This package is used to handle request from common users to map given shortened URL to its original one
+ */
 package main
 
 import (
